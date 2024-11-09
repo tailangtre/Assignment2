@@ -1,0 +1,39 @@
+#!/bin/bash
+# This file stored in /root
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root or with sudo"
+    exit 1
+fi
+# Flags to determine which tasks to run
+RUN_INSTALL=0
+RUN_SYMLINK=0
+
+# Parse options
+while getopts ":il" opt; do
+    case $opt in
+        i) RUN_INSTALL=1 ;;    # Run install-packages
+        l) RUN_SYMLINK=1 ;;    # Run create-symlinks
+        \?) echo "Invalid option: -$OPTARG" >&2; exit 1 ;;
+    esac
+done
+
+# Run package installation if requested
+if [[ $RUN_INSTALL -eq 1 ]]; then
+    echo "Running install-packages..."
+    bash "$HOME/install-packages"
+fi
+
+# Run symlink creation if requested
+if [[ $RUN_SYMLINK -eq 1 ]]; then
+    echo "Running create-symlinks..."
+    bash "$HOME/create-symlinks"
+fi
+
+# Error if neither -i nor -l was specified
+if [[ $RUN_INSTALL -eq 0 && $RUN_SYMLINK -eq 0 ]]; then
+    echo "Error: You must specify at least -i (install) or -l (symlink) to run."
+    exit 1
+fi
+
+echo "Setup complete."

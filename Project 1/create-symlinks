@@ -1,0 +1,31 @@
+#!/bin/bash
+# This file stored in /root
+
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root or with sudo"
+    exit 1
+fi
+
+# Predefined paths for symlinks
+BIN_SRC="/bin"
+CONFIG_SRC="/config"
+BASHRC_HOME="/home/bashrc"
+
+# Target locations
+BIN="$HOME/bin"
+CONFIG="$HOME/.config"
+BASHRC="$HOME/.bashrc"
+
+# Create symbolic link for bin directory
+echo "Creating symbolic link for bin directory..."
+ln -sf "$BIN_SRC" "$BIN"
+
+# Create symbolic link for config directory
+echo "Creating symbolic link for config directory..."
+ln -sfn "$CONFIG_SRC" "$CONFIG"
+
+# Create symbolic link for bashrc
+echo "Creating symbolic link for bashrc..."
+ln -sf "$BASHRC" "$BASHRC_HOME" 
+
+echo "Symlink creation complete."

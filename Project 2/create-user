@@ -1,0 +1,73 @@
+#!/bin/bash
+
+# Check if the script is run as root or with sudo
+if [ "$(id -u)" -ne 0 ]; then
+    echo "This script must be run as root or with sudo"
+    exit 1
+fi
+
+# Function to display usage instructions
+usage() {
+    echo "Usage: $0 -u <username> -s <shell>"
+    echo "  -u    Username for the new user (required)"
+    echo "  -s    Shell for the new user (default: /bin/bash)"
+    exit 1
+}
+
+
+# Default shell
+SHELL="/bin/bash"
+
+# Parse command-line options using getopts
+while getopts "u:s:" opt; do
+    case $opt in
+        u) USERNAME="$OPTARG" ;;  # Set the username
+        s) SHELL="$OPTARG" ;;      # Set the shell
+        *) usage ;;                # Show usage for invalid options
+    esac
+done
+
+# Ensure that a username is provided
+if [ -z "$USERNAME" ]; then
+    echo "Error: Username is required"
+    usage
+fi
+
+# Function to create the user
+create_user() {
+    local username="$1"
+    local shell="$2"
+
+    # Create the user with the specified shell
+    useradd -m -s "$shell" "$username"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to create user $username"
+        exit 1
+    fi
+
+    # Set the password for the user
+    echo "Setting password for $username"
+    passwd "$username"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to set password for $username"
+        exit 1
+    fi
+
+    # Add the user to their own primary group
+    usermod -aG "$username" "$username"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to add user $username to group"
+        exit 1
+    fi
+
+    # Copy the contents of /etc/skel to the new user's home directory
+    cp -r /etc/skel/. "/home/$username/"
+    if [ $? -ne 0 ]; then
+        echo "Error: Failed to copy skel files to /home/$username"
+        exit 1
+    fi
+
+    echo "User $username created successfully with shell $shell"
+}
+
+create_user "$USERNAME" "$SHELL"
